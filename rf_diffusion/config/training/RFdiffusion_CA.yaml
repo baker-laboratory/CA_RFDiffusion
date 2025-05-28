@@ -1,0 +1,172 @@
+# Config file for training CA RFdiffusion from Lauko, et al., 2024 
+
+defaults:
+  - new_base 
+
+ckpt_load_path: /mnt/projects/ml/ca_rfd/rf2a_25c_414_t1d_81_t2d_69.pt 
+
+wandb: false
+
+num_workers: 0
+
+extra_tXd: null
+
+motif_only_2d: true
+
+
+resume_scheduler: false 
+
+pseudobatch: 16 # that is, accumulate gradients until 16 total examples 
+model_name: caBFF
+
+preprocess: 
+  eye_frames: true
+  use_cb_to_get_pair_dist: true
+  omit_atom_frame_permutation: ${motif_only_2d}
+
+loss:
+  backprop_non_displacement_on_given: false
+
+upstream_training_transforms: 
+  names: 
+    - GenerateMasks
+    - PopMask
+
+transforms: 
+  names:
+    - ComputeMotifTemplate
+    - CenterOnCA # since we are doing motif_only_2d, centers on all
+    - AddConditionalInputs
+  
+  configs:
+    ComputeMotifTemplate:
+      use_cb: ${preprocess.use_cb_to_get_pair_dist}
+      omit_frame_permutation: ${preprocess.omit_atom_frame_permutation}
+    Center: {}
+    CenterOnCA: {}
+    AddConditionalInputs:
+      p_is_guidepost_example: ${dataloader.P_IS_GUIDEPOST_EXAMPLE}
+      guidepost_bonds: ${guidepost_bonds}
+
+dataloader: 
+  CROP: 276 # for some reason 20 is subtracted in the code...
+  DATAPKL_AA: dataset_diffusion_20230214.pkl
+  DATASETS: pdb_aa,compl,sm_complex,sm_compl_covale,metal_compl,sm_compl_asmb,sm_compl_multi
+  DATASET_PROB:
+  - 0.6
+  - 0.0
+  - 0.4
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  DIFF_MASK_PROBS:
+    get_diffusion_mask_chunked: 0.2
+    get_multi_triple_contact_3template: 0.5
+    get_unconditional_3template:  0.2999999
+    get_sm_contact_3template: 0.0000001      
+    get_unconditional_diffusion_mask: 0.0
+  
+  mask:
+    # not allowed when there is a sm 
+    pop_on_sm:
+      - get_diffusion_mask_chunked
+      - get_multi_triple_contact_3template
+      - get_unconditional_3template
+      - get_unconditional_diffusion_mask
+
+    # not allowed when there is NO sm
+    pop_on_no_sm:
+      - get_sm_contact_3template
+
+
+
+diffuser: 
+  T: 200
+  
+  r3: 
+    min_b: 0.01
+    max_b: 0.07
+    coordinate_scaling: 0.25
+    T: ${..T}
+    schedule_kwargs: {}
+    var_scale: 1.0
+    noise_scale: 1.0  
+
+  step_back_via_noiser: true
+    
+
+
+experiment: 
+  gamma: 0.99
+  trans_loss_weight: 0.5 
+  trans_score_weight: 0.0
+  rot_loss_weight: 0.0
+  bb_atom_loss_weight: 0.0
+  dist_mat_loss_weight: 0.0
+  c6d_loss_weight: 0.05
+  fm_translation_loss_weight: 0.0
+  fm_rotation_loss_weight: 0.0
+  fm_bb_atom: 0.0
+  fm_dist_mat: 0.0
+  i_fm_translation_loss_weight: 0.0
+  i_fm_rotation_loss_weight: 0.0
+
+  # need to override from base
+  
+
+  # additional loss terms for ca diffusion 
+  motif_fape_weight: 10
+  nonmotif_fape_weight: 0.0
+  ligand_intra_fape_weight: 10.0
+  prot_lig_inter_fape_weight: 10.0
+  plddt_weight: 0.0
+
+  #  ca rfdiffusion loss fxn hyperparams 
+  norm_fape: 10
+  d_clamp_fape: 10
+
+rf:
+  model: 
+    n_extra_block: 4
+    n_main_block: 32
+    n_ref_block: 4
+    n_finetune_block: 0
+    d_msa: 256
+    d_msa_full: 64
+    d_pair: 192
+    d_templ: 64
+    n_head_msa: 8
+    n_head_pair: 6
+    n_head_templ: 4
+    d_hidden: 32
+    d_hidden_templ: 64
+    p_drop: 0.15
+    use_chiral_l1: true
+    use_lj_l1: true
+    use_atom_frames: true
+    freeze_track_motif: true
+    d_t1d: 81
+    d_t2d: 69
+    SE3_param: 
+      num_layers: 1
+      num_channels: 32
+      num_degrees: 2
+      n_heads: 4
+      div: 4
+      l0_in_features: 64
+      l0_out_features: 64
+      l1_in_features: 3 
+      l1_out_features: 2
+      num_edge_features: 64
+    SE3_ref_param: 
+      num_layers: 2
+      num_channels: 32
+      num_degrees: 2
+      n_heads: 4
+      div: 4
+      l0_in_features: 64
+      l0_out_features: 64
+      l1_in_features: 3
+      l1_out_features: 2
+      num_edge_features: 64

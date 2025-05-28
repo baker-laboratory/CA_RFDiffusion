@@ -1,0 +1,29 @@
+# Train CA RFdiffusion refinement model
+
+defaults:
+  - RFdiffusion_CA
+
+model_name: caBFF_refine
+maxcycle: 4
+
+loss:
+  use_fapes: true
+
+diffuser:
+  type: refine
+  T: 1 
+
+  r3:
+    T: ${..T}
+    var_scale: 0.0
+    refine_variance: 1.5
+
+  so3:
+    T: ${..T}
+
+preprocess:
+  eye_frames: false # they will just be randomized from refine diffuser
+
+experiment:
+  nonmotif_fape_weight: 10.0 # this time, nonmotif fape is included
+

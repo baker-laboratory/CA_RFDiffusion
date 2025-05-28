@@ -1,0 +1,10 @@
+# Train CA RFdiffusion diffusion model
+
+defaults: 
+  - RFdiffusion_CA
+
+diffuser:
+  type: legacy
+
+loss:
+  use_fapes: true

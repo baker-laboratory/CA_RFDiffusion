@@ -1,0 +1,37 @@
+defaults: 
+  - RFdiffusion_CA
+
+zero_weights: True 
+
+diffuser: 
+  type: 'legacy'
+
+dataloader:
+  DATAPKL_AA: goldens/tiny_dataset_diffusion_20230214.pkl
+
+spoof_item: "{   'chosen_dataset': 'sm_complex',
+                 'mask_gen_seed': 46265381,
+                 'sel_item': {   'ASSEMBLY': 1,
+                                 'CHAINID': '6nqz_A',
+                                 'CLUSTER': 7989,
+                                 'COVALENT': [],
+                                 'DEPOSITION': '2019-01-22',
+                                 'HASH': '027410',
+                                 'LEN_EXIST': 206,
+                                 'LIGAND': [('C', '301', 'I3C')],
+                                 'LIGATOMS': 16,
+                                 'LIGATOMS_RESOLVED': 16,
+                                 'LIGXF': [('C', 2)],
+                                 'PARTNERS': [   (   'A',
+                                                     0,
+                                                     93,
+                                                     2.867526054382324,
+                                                     'polypeptide(L)'),
+                                                 (   'B',
+                                                     1,
+                                                     0,
+                                                     11.382442474365234,
+                                                     'polypeptide(L)')],
+                                 'RESOLUTION': 2.58,
+                                 'SEQUENCE': 'GSGSQQNSGSDQKSQPSSAQLGQSILETERKLDEKIFELNQRLTRHTVLMKMKVRVLPFRTVLFKGKANNDECTPAINQEDPANNCIRVEVYDFIRDEERGLNKNVQGALAKYMEIYFEGQNSNDPEPRTEPPRNINKLKSKIYKNNMVLEDKIISEVMDRGPNTQPSHNDKVEVFFQKDNYPEYGRPETPAEKGVGKYILAGVENTKTHPIRNSFKKEFYIKHLDQFDRLFTKIFDYNDQLGNENYKENVDALKDSLRY'},
+                 'task': 'diff'}"

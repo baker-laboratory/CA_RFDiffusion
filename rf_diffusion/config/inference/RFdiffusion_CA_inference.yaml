@@ -1,0 +1,111 @@
+# Config file for running diffusion model inference for CA RFdiffusion from Lauko, et al., 2024
+defaults: 
+  - base 
+
+# Diffusion stuff 
+diffuser: 
+  type: 'legacy'
+  T: 50
+  
+  r3: 
+    min_b: 0.01
+    max_b: 0.07
+    coordinate_scaling: 0.25
+    T: ${..T}
+    schedule_kwargs: {}
+    var_scale: ${diffuser.r3.noise_scale}
+    noise_scale: 0.05 
+
+  step_back_via_noiser: true
+
+# Note: user needs to point ckpt_path to wherever their copy of 'ca_rfd_diffusion.pt' landed
+inference: 
+  output_prefix: ./experiments/caRFD_test
+  ckpt_path: './ca_rfd_diffusion.pt' 
+  input_pdb: ./test_data/siteC.pdb
+  str_self_cond: 1
+  ij_visible: 'abcde' # e is the ligand
+  length: 90-125
+  ligand: mu2
+  write_trajectory: true
+  recenter_xt: true 
+  num_designs: 15
+  cautious: true 
+  guidepost_xyz_as_design: false
+
+contigmap:  
+  contigs: ['30,A1-4,40,A5-5,40,A6-6,40,A7-7,40']
+
+
+motif_only_2d: true 
+extra_tXd: []
+
+preprocess: 
+  eye_frames: true
+  use_cb_to_get_pair_dist: true
+  omit_atom_frame_permutation: ${motif_only_2d}
+
+#### Transforms ####
+upstream_inference_transforms: 
+  names:
+    - GetTemplatedMotifMasks
+  configs: 
+    GetTemplatedMotifMasks: 
+      ij_visible: ${inference.ij_visible}
+      template_ligand: true
+    
+transforms: 
+  names:
+    - ComputeMotifTemplate
+    - CenterOnCA # since we are doing motif_only_2d, center on all
+    - AddConditionalInputs
+  configs:
+    ComputeMotifTemplate:
+        use_cb: ${preprocess.use_cb_to_get_pair_dist}
+        omit_frame_permutation: ${preprocess.omit_atom_frame_permutation}
+
+
+rf:
+  model: 
+    n_extra_block: 4
+    n_main_block: 32
+    n_ref_block: 4
+    n_finetune_block: 0
+    d_msa: 256
+    d_msa_full: 64
+    d_pair: 192
+    d_templ: 64
+    n_head_msa: 8
+    n_head_pair: 6
+    n_head_templ: 4
+    d_hidden: 32
+    d_hidden_templ: 64
+    p_drop: 0.15
+    use_chiral_l1: true
+    use_lj_l1: true
+    use_atom_frames: true
+    freeze_track_motif: true
+    d_t1d: 81
+    d_t2d: 69
+    SE3_param: 
+      num_layers: 1
+      num_channels: 32
+      num_degrees: 2
+      n_heads: 4
+      div: 4
+      l0_in_features: 64
+      l0_out_features: 64
+      l1_in_features: 3 
+      l1_out_features: 2
+      num_edge_features: 64
+    SE3_ref_param: 
+      num_layers: 2
+      num_channels: 32
+      num_degrees: 2
+      n_heads: 4
+      div: 4
+      l0_in_features: 64
+      l0_out_features: 64
+      l1_in_features: 3
+      l1_out_features: 2
+      num_edge_features: 64

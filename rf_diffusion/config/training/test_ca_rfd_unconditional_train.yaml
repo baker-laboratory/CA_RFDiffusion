@@ -1,0 +1,23 @@
+defaults: 
+  - RFdiffusion_CA
+
+zero_weights: True 
+
+diffuser: 
+  type: 'legacy'
+
+dataloader:
+  DATAPKL_AA: goldens/tiny_dataset_diffusion_20230214.pkl
+
+spoof_item: "{   'chosen_dataset': 'pdb_aa',
+     'mask_gen_seed': 46265381,
+     'sel_item': {   'CHAINID': '5msh_A',
+                     'CLUSTER': 16148,
+                     'DEPOSITION': '2017-01-04',
+                     'HASH': '025637',
+                     'LEN_EXIST': 182,
+                     'RESOLUTION': 4.25,
+                     'SEQUENCE': 'GPVCAEASDVYSPCMIASTPPAPFSDVTAVTFDLINGKITPVGDDNWNTHIYNPPIMNVLRTAAWKSGTIHVQLNVRGAGVKRADWDGQVFVYLRQSMNPESYDARTFVISQPGSAMLNFSFDIIGPNSGFEFAESPWANQTTWYLECVATNPRQIQQFEVNMRFDPNFRVAGNILMPPFPLSTETPPL',
+                     'TAXID': '12264',
+                     'Unnamed: 0': 522560},
+     'task': 'diff'}"

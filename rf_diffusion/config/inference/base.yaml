@@ -1,0 +1,288 @@
+# Base inference Configuration.
+
+inference:
+  input_pdb: rf_diffusion/test_data/1qys.pdb
+  num_designs: 10
+  design_startnum: 0
+  ca_rfd_refine: false
+  seed_offset: 0
+  ckpt_path: /net/scratch/ahern/se3_diffusion/training/fm_tip_resume_24/fm_tip_resume_242023-12-03_14:20:34.490797/rank_0/models/RFD_44.pt
+  autogenerate_contigs: False
+  old_symmetry: null
+  recenter: True
+  radius: 10.0
+  model_only_neighbors: False
+  num_recycles: 1
+  recycle_schedule: null
+#  str_self_cond: True # this is secretly here. The training yamls include it for you
+  start_str_self_cond_at_t: null # int. Overrides str_self_cond. At this given t-step, start doing self conditioning
+  softmax_T: 1e-5
+  output_prefix: samples/design
+  silent_out: False # Write silent files instead of pdbs. Doesn't support small molecules (yet). No trb unless write_trb=FORCE. No scorefile unless write_scorefile=FORCE
+  silent_folder_sep: '_-_' # How folders are denoted in silent_file tags. Set to False, null, or '' to disable adding fodler to name
+  write_trajectory: False # Boolean. Should the /traj/ video pdb file be generated? Takes up a lot of space in production
+  write_trajectory_only_t: [] # list(int). Only write trajectory for these given t steps. Example: [50,40,30,20]
+  write_trb: True # Boolean. Should the .trb file be written?
+  write_trb_indep: False # Boolean. Should the indep be written to the .trb? Adds about 200KB to trb
+  write_trb_trajectory: False # Boolean. Should the trajectory be written to the .trb? Adds about 10MB to trb
+  write_extra_ts: [] # list[int]. Save the indep from additional t steps (besides the usual final_step)
+  write_scorefile: True # Write a scorefile if there are scores to write
+  scorefile_delimiter: ' ' # ',' implies .csv, ' ' implies .sc
+  write_scores_to_trb: True # If scores are present, write to trb
+  scaffold_guided: False
+  model_runner: NRBStyleSelfCond
+  cautious: True
+  recycle_between: False
+  align_motif: True
+  autoregressive_confidence: True
+  no_confidence: True
+  use_jw_selfcond: False
+  symmetric_self_cond: True
+  final_step: 1
+  custom_t_range: null # list[int]. Only calculate pX0 at t steps given in this list. Negative numbers can be used to partially diffuse to new ts [50,25,-40,25,1]
+  feed_true_xt: False
+  deterministic: False
+  zero_weights: False
+  ligand: null
+  ema: True
+  contig_as_guidepost: False
+  remove_guideposts_from_output: True
+  state_dict_to_load: model_state_dict
+  infer_guidepost_positions: True
+  guidepost_xyz_as_design: True
+  guidepost_xyz_as_design_bb: [False]
+  only_guidepost_positions: null # String. Do not guidepost every position, only guidepost these residues. "A1-4,B5,B8,B9,LG1:C1-C16"
+  conditions:
+    relative_sasa:
+      mean: 0.5
+      std: 3.0
+    radius_of_gyration:
+      mean: 15
+      std: 20
+    radius_of_gyration_v2:
+      active: False
+      rog: -1
+    relative_sasa_v2:
+      active: False
+      rasa: -1
+    little_t_embedding: null
+    sinusoidal_timestep_embedding: null
+    ss_adj_cond: {}
+    ppi_hotspots_antihotspots: {}
+    ideal_ss_cond: {}
+    target_hbond_satisfaction_cond: {}
+  safety:
+    # Indicates that a user is carefully performing sidechain partial diffusion.
+    # We require this to be set, as unless a user is careful this causes undefined behavior.
+    sidechain_partial_diffusion: False
+  flexible_ligand: False
+  partially_fixed_ligand: {} # fixes these atoms, diffuses the rest. Example usage: {'ABC': ['C01', 'N02'], 'DEF': ['C0','C1','C2']}
+  center_motif: True
+  classifier_free_guidance_scale: 1
+  idealize_sidechain_outputs: False
+  recenter_xt: False
+  update_seq_t: False
+  differential_atomized_decoder_include_sm: True
+  fast_partial_trajectories: null # List of lists like [[1,20,3],[5,25,3]]. Specifies that original t-steps (here 1 and 5) should be partially diffused to 20 then 3 (or 25 then 3) and output
+  fpt_drop_guideposts: False # bool -- Do you want to get rid of guideposting when we switch to the fast_partial_trajectories?
+  fpt_diffuse_chains: null # null | str. Which chains should we override the diffusion mask for. Could look like 0, or 0,1, or 'all'
+  ORI_guess: False # bool or int. Use the provided ORI setup to perform 1 diffusion step. Then use that new CoM as the ORI. Set this to an int to do that multiple times
+  t_setups:
+    names:
+      - CustomTRangeTSetup  # This one pretty much needs to be first (if active)
+      - StartSelfCondTSetup
+      - WriteExtraTsTSetup
+      - ORIGuessTSetup
+      - FastPartialTrajectoriesTSetup # This one pretty much needs to be last (if active)
+    debug: False # Set to true to print out a bunch of stuff
+
+contigmap:
+  contigs: ['20', 'A3-23', '30']
+  contig_atoms: null
+  inpaint_str: null
+  inpaint_seq: null
+  length: null
+  shuffle: null
+  has_termini: [True]
+  intersperse: null
+  reintersperse: False
+  shuffle_and_random_partition: False
+
+rf:
+  model:
+    use_chiral_l1: ${model.use_chiral_l1}
+    use_lj_l1: ${model.use_lj_l1}
+    use_atom_frames: ${model.use_atom_frames}
+    use_same_chain: ${model.use_same_chain}
+    recycling_type: ${model.recycling_type}
+    enable_same_chain: ${model.enable_same_chain}
+    refiner_topk: ${model.refiner_topk}
+    get_quaternion: ${model.get_quaternion}
+
+model:
+  use_chiral_l1: True
+  use_lj_l1: True
+  use_atom_frames: True
+  use_same_chain: True
+  recycling_type: all
+  enable_same_chain: True
+  refiner_topk: 128
+  get_quaternion: True
+  n_extra_block: 4
+  n_main_block: 32
+  n_ref_block: 4
+  d_msa: 256
+  d_msa_full: 64
+  d_pair: 128
+  d_templ: 64
+  n_head_msa: 8
+  n_head_pair: 4
+  n_head_templ: 4
+  d_hidden: 32
+  d_hidden_templ: 32
+  p_drop: 0.15
+  SE3_param:
+    num_layers: -1
+    num_channels: -1
+    num_degrees: -1
+    n_heads: -1
+    div: -1
+    l0_in_features: -1
+    l0_out_features: -1
+    l1_in_features: -1
+    l1_out_features: -1
+    num_edge_features: -1
+  SE3_ref_param:
+    n_extra_block: -1
+    n_main_block: -1
+    n_ref_block: -1
+    n_finetune_block: -1
+    d_msa: -1
+    d_msa_full: -1
+    d_pair: -1
+    d_templ: -1
+    n_head_msa: -1
+    n_head_pair: -1
+    n_head_templ: -1
+    d_hidden: -1
+    d_hidden_templ: -1
+    p_drop: -1
+    use_extra_l1: -1
+    use_atom_frames: -1
+    freeze_track_motif: -1
+  freeze_track_motif: False
+  symmetrize_repeats: False
+  repeat_length: null
+  symmsub_k: null
+  sym_method: mean
+  copy_main_block_template: False
+  main_block: null
+
+diffuser:
+  T: 50
+  partial_T: null    
+  aa_decode_steps: 40
+  so3:
+    use_cached_score: false
+  preserve_motif_sidechains: false
+  independently_center_diffuseds: False # Center both is_diffused and ~is_diffused noise independently after calling diffuse
+
+seq_diffuser:
+  s_b0: null
+  s_bT: null
+  schedule_type: null
+  loss_type: null
+  seqdiff: null
+
+denoiser:
+  noise_scale: 1
+  noise_scale_ca: 1
+  noise_scale_frame: 1
+  noise_scale_torsion: 1
+  center: False
+
+filters:
+  max_attempts_per_design: 10 # If filters enabled, for a given design, try at most this many times before giving up
+  max_steps_per_design: 100 # If filters enabled, for a given design, take at most this many diffusion steps (cumulative across failures) before giving up
+  names: [] # The names of the filters. Either: FilterType or UserDefinedName:FilterType if you want to have multiple of the same type of filter
+  configs: {} # Configs for each of your filters. Use UserDefinedName if that's how you specified it in names
+
+ppi:
+  hotspot_res: null # Which residues on the target should we be within 7A (CB-dist) of? (B10,B15,B20-25)
+  super_hotspot_res: null # Which residues should be absolutely buried? Requires a special model. (B10,B15,B20-25)
+  antihotspot_res: null # Which residues on the target should we be at least 10A away from?
+  exposed_N_terminus: 0 # How many N-terminus residues of the first chain should be at least 10A away from every other chain?
+  exposed_C_terminus: 0 # How many C-terminus residues of the first chain should be at least 10A away from every other chain?
+
+ideal_ss: # These all require AddIdealSS transforms for training and inference
+  ideal_value: null # A number 0-1 that describes how ideal of a protein you want
+  ideal_std: 0.2 # Std of noise added to ideal_value. Usually trained at 0.2
+  avg_scn: null # Average sidechain neighbors that you want your design to have
+  scn_std: 0 # Std of noise added to avg scn. Usually trained at either 0.3 if exactly specified or 0 if avg given
+  loop_frac: null # Fraction 0-1 of your design that you want to be a loop
+  topo_spec: null # A dictionary of topologies and their probabilities. ELSE and None refer to "topo outside of choices" and "unspecified" {'HHH':0.5, 'ELSE':0.5}
+
+potentials:
+  guiding_potentials: null 
+  guide_scale: 10
+  guide_decay: constant
+  olig_inter_all : null
+  olig_intra_all : null
+  olig_custom_contact : null
+
+contig_settings:
+  ref_idx: null
+  hal_idx: null
+  idx_rf: null
+  inpaint_seq_tensor: null
+  inpaint_str_tensor: null
+
+preprocess:
+  sidechain_input: False
+  motif_sidechain_input: True
+  sequence_decode: True
+  d_t1d: 22
+  d_t2d: 44
+  prob_self_cond: 0.0
+  str_self_cond: False # so this isn't used...
+  seq_self_cond: False
+  predict_previous: False
+  randomize_frames: False
+  annotate_termini: True
+  use_cb_to_get_pair_dist: True
+  
+logging:
+  inputs: False
+
+extra_tXd_params: {}
+
+upstream_inference_transforms: # Transforms that are only applied for inference. Likely have similar-but-different training copies
+  names: []
+  configs: {}
+
+scaffoldguided: # This group of flags is related to the original Joe + Nate diffusion scaffold loader using ss/adj files
+  scaffold_list: null # Optional: Either an actual list ['A', 'B'] or a path to a .txt file that contains scaffold names. A contig for each scaffold may be included after the name
+  scaffold_dir: null # Either this or scaffold_arc must be specified. A path to a dir of _ss.pt and _adj.pt files. Will be ls'd if scaffold_list is null
+  scaffold_arc: null # Either this or scaffold_dir must be specified. A dictionary stored as a .pt file mapping scaffold names to tuple(ss,adj). Use all if scaffold_list is null
+  sampled_insertion: 0 # Up to this many MASK tokens will be injected into every loop/mask segment of your scaffold
+  sampled_N: 0 # Up to this many MASK tokens will be added to the front of your scaffold
+  sampled_C: 0 # Up to this many MASK tokens will be added to the end of your scaffold
+  ss_mask: 0 # Each non-loop/non-mask section will be trimmed by this many AA
+  systematic: False # Should your scaffold_list (or contents of scaffold_dir/scaffold_arc) be traversed in order or randomly without replacement?
+  mask_loops: True # Should loops in your ss file be converted to MASK?
+  not_legacy_adj: False # In Joe + Nate's ss/adj files, loops are set to ADJ_FAR which is unfortunate (when they are truly ADJ_MASK). If you actually want this behavior, set this true
+  target_ss: null # ss file for your target. See new autogenerate_target_ss_adj
+  target_adj: null # adj file for your target. See new autogenerate_target_ss_adj
+  autogenerate_target_ss_adj: False # Autogenerate the ss/adj file for your target. Same as make_secstruc_adj.py output. No slowdown
+
+transforms:
+  configs:
+    # Default inference overrides for transforms regardless if they are used or not in the original model
+    CenterPostTransform:
+      jitter: 0.0
+    AddConditionalInputs:
+      p_is_guidepost_example: ${inference.contig_as_guidepost}
+      guidepost_bonds: ${guidepost_bonds}
+    ExpandConditionsDict: {}
+
+pyrosetta_flags: "-mute all -beta_nov16"

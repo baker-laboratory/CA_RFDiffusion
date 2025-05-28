@@ -1,0 +1,291 @@
+upstream_training_transforms:
+  names:
+    - GenerateMasks
+    - PopMask
+
+  configs:      
+    GenerateMasks: {}
+    PopMask: {}
+
+transforms:
+  names:    
+    - Center
+    - AddConditionalInputs
+    - ExpandConditionsDict
+
+  configs:    
+    PopMask: {}
+    ReconstructContigMap: {}
+    Center: {}
+    AddConditionalInputs:
+      p_is_guidepost_example: ${dataloader.P_IS_GUIDEPOST_EXAMPLE}
+      guidepost_bonds: ${guidepost_bonds}
+    ExpandConditionsDict: {}
+
+motif_only_2d: false
+omit_frame_permutations: false
+
+loss:
+  backprop_non_displacement_on_given: false
+  use_fapes: false 
+
+ddp_backend: 'gloo'
+inference:
+  str_self_cond: true
+  contig_as_guidepost: true
+
+guidepost_bonds: true
+diffuser:
+  independently_center_diffuseds: false
+  diffuse_trans: true
+  diffuse_rot: true
+  r3:
+    min_b: 0.1
+    max_b: 20.0
+    coordinate_scaling: 0.1
+  so3:
+    num_omega: 1000
+    num_sigma: 1000
+    min_sigma: 0.1
+    max_sigma: 1.5
+    schedule: logarithmic
+    cache_dir: .cache/
+    use_cached_score: false
+  T: 200
+  time_type: discrete
+  t_distribution: uniform
+  type: diffusion
+  preserve_motif_sidechains: false  # Default behavior (set to false) is to diffuse all atoms and restore rigids of the frame for position that are not diffused (meaning side chain information is lost). When set to true, diffusion and frames addition are only performed on positions that are set to diffuse via the is_diffused boolean mask
+  center_noise_sample: true # Set the center of the noise sample 0,0,0
+experiment:
+  trans_loss_weight: 1.0
+  rot_loss_weight: 1.0
+  trans_x0_threshold: 1.0
+  normalize_trans_x0: false
+  bb_atom_loss_weight: 1.0
+  bb_atom_loss_t_filter: 0.25
+  dist_mat_loss_weight: 1.0
+  dist_mat_loss_t_filter: 0.25
+  aux_loss_weight: 0.25
+  c6d_loss_weight: 0.0
+  gamma: 0.95
+  n_bb: 3
+  batch_size: 1
+  warm_start: null
+  early_ckpt_after: 2
+  keep_only_last_ckpt: false
+  fm_translation_loss_weight: 0.0
+  fm_rotation_loss_weight: 0.0
+  fm_bb_atom: 0.0
+  fm_dist_mat: 0.0
+  i_fm_translation_loss_weight: 0.0
+  i_fm_rotation_loss_weight: 0.0 
+  i_fm_kernel_width: 7.5  # Kernel width
+  i_fm_kernel_activation_thresh: 0.0   # Activation threhold bias to allow all values below this to have the same width
+  i_fm_kernel_exponent: 1  # Kernel exponent (exponential gaussian etc)
+  motif_fape_weight: 0.0
+  nonmotif_fape_weight: 0.0
+  ligand_intra_fape_weight: 0.0
+  prot_lig_inter_fape_weight: 0.0
+
+sm_loss_weight: 0.0
+rf:
+  model:
+    n_extra_block: 4
+    n_main_block: 32
+    n_ref_block: 4
+    d_msa: 256
+    d_msa_full: 64
+    d_pair: 192
+    d_templ: 64
+    n_head_msa: 8
+    n_head_pair: 6
+    n_head_templ: 4
+    d_hidden: 32
+    d_hidden_templ: 64
+    d_t1d: 80
+    d_t2d: 68
+    p_drop: 0.15
+    SE3_param:
+      num_layers: 1
+      num_channels: 32
+      num_degrees: 2
+      n_heads: 4
+      div: 4
+      l0_in_features: 64
+      l0_out_features: 64
+      l1_in_features: 3
+      l1_out_features: 2
+      num_edge_features: 64
+    SE3_ref_param:
+      num_layers: 2
+      num_channels: 32
+      num_degrees: 2
+      n_heads: 4
+      div: 4
+      l0_in_features: 64
+      l0_out_features: 64
+      l1_in_features: 3
+      l1_out_features: 2
+      num_edge_features: 64
+    freeze_track_motif: true
+    symmetrize_repeats: false
+    repeat_length: None
+    symmsub_k: None
+    sym_method: mean
+    copy_main_block_template: false
+    main_block: None
+    lj_lin: 0.75
+    get_quaternion: True
+  ckpt_path: null
+model:
+  embed:
+    embed_self_conditioning: false
+seed: 0
+wandb: true
+wandb_prefix: ''
+debug: false
+epoch_size: 25600
+prob_self_cond: 0.5
+seq_self_cond: false
+sequence_decode: true
+rundir: /net/scratch/${oc.env:USER}/se3_diffusion/training/default
+interactive: false
+batch_size: 1
+verbose_checks: false
+lr: 0.001
+l2_coeff: 0.01
+model_name: RFD
+ckpt_load_path: /home/rohith/rf2a-fd3/models/rf2a_25c_414.pt
+resume: null
+resume_scheduler: True
+scheduler:
+  n_warmup_steps: 0
+reinitialize_missing_params: False
+zero_weights: false
+n_epoch: 500
+maxcycle: 1
+timing_summary_every: 1
+pseudobatch: 32
+log_inputs: False
+metrics:
+- atom_bonds
+log_every_n_examples: 1
+log_metrics_inputs_every_n_examples: 30
+n_write_pdb: 30
+saves_per_epoch: 2
+preprocess:
+  randomize_frames: false
+  sidechain_input: false
+  d_t1d: 22
+  annotate_termini: True
+  use_cb_to_get_pair_dist: True
+spoof_item: ''
+dataloader:
+  OMIT_PERMUTATE: False
+  BLOCKCUT: 5
+  CN_DICT: /home/jwatson3/torch/cn_ideal/cn_ideal_train_test.pt
+  CN_DIR: /home/jwatson3/torch/cn_ideal
+  COMPLEX_HAL_MASK_HIGH: 35
+  COMPLEX_HAL_MASK_HIGH_AR: 50
+  COMPLEX_HAL_MASK_LOW: 10
+  COMPLEX_HAL_MASK_LOW_AR: 20
+  COMPL_DIR: /projects/ml/RoseTTAComplex
+  COMPL_LIST: /projects/ml/RoseTTAComplex/list.hetero.csv
+  CROP: 256
+  RADIAL_CROP: True
+  DATAPKL: ./dataset.pkl
+  DATAPKL_AA: aa_dataset_256.pkl
+  DATASETS: pdb_aa,sm_complex
+  DATASET_PROB: [0.5,0.5]
+  DATCUT: 2020-Apr-30
+  DIFF_MASK_HIGH: 999
+  DIFF_MASK_LOW: 20
+  DIFF_MASK_PROBS: {get_unconditional_diffusion_mask: 1.0}
+  DISCONTIGUOUS_CROP: true
+  FB_DIR: /projects/ml/TrRosetta/fb_af
+  FB_LIST: /projects/ml/TrRosetta/fb_af/list_b1-3.csv
+  FLANK_HIGH: 6
+  FLANK_LOW: 3
+  HAL_MASK_HIGH: 35
+  HAL_MASK_HIGH_AR: 50
+  HAL_MASK_LOW: 10
+  HAL_MASK_LOW_AR: 20
+  HOMO_LIST: /projects/ml/RoseTTAComplex/list.homo.csv
+  MASK_BROKEN_PROPORTION: 0.5
+  MASK_MAX_PROPORTION: 1.0
+  MASK_MIN_PROPORTION: 0.2
+  MAXCYCLE: 1
+  MAXLAT: 256
+  MAXSEQ: 1024
+  MAXTPLT: 4
+  MAX_COMPLEX_CHAIN: 250
+  MAX_LENGTH: 256
+  MINSEQ: 1
+  MINTPLT: 1
+  MOL_DIR: /projects/ml/RF2_allatom/rcsb/pkl
+  NEGATIVE_LIST: /projects/ml/RoseTTAComplex/list.negative.csv
+  PDB_DIR: /projects/ml/TrRosetta/PDB-2021AUG02
+  PDB_LIST: /projects/ml/TrRosetta/PDB-2021AUG02/list_v02.csv
+  PLDDTCUT: 70.0
+  RESCUT: 5.0
+  ROWS: 1
+  SCCUT: 90.0
+  SEQID: 150.0
+  SPOOF_ITEM: ''
+  STR2SEQ_FULL_HIGH: 1.0
+  STR2SEQ_FULL_LOW: 0.9
+  USE_GUIDE_POSTS: true
+  VAL_COMPL: /projects/ml/RoseTTAComplex/val_lists/xaa
+  VAL_NEG: /projects/ml/RoseTTAComplex/val_lists/xaa.neg
+  VAL_PDB: /projects/ml/TrRosetta/PDB-2021AUG02/val/xaa
+  max_residues: -1
+  P_IS_GUIDEPOST_EXAMPLE: 1.0
+  use_fallback: true
+  use_validation_config: False
+  mask:
+    ppi_radial_crop_low: 10       # PPI radial crop distance from hotspots lowerbound
+    ppi_radial_crop_high: 25      # PPI radial crop distance from hotspots upperbound
+    ppi_planar_crop_low: 10       # PPI planar crop distance from hotspots lowerbound
+    ppi_planar_crop_high: 25      # PPI planar crop distance from hotspots upperbound
+    max_frac_ppi_motifs: 0.8      # PPI maximum fraction of motifs kept in motif masks
+    max_ppi_motif_trim_frac: 0.4  # PPI maximum fraction of a single motif that is removed when trimming motifs
+  p_msa_mask: 0.0
+data:
+  samples_per_eval_length: 1
+  num_eval_lengths: 1
+  num_t: 100
+master_port: null
+conditionless_freq: 0
+
+show_dataset:
+    show: True
+    show_diffused: False
+    n: 10
+    show_only_backbone: False
+    show_ss_cond: False # Show the secondary structure conditioning that has been applied
+    ss_t1d_offset: -1 # Offset into t1d for the first (SS_HELIX) of the ss conditioning channels. Supports negative indexing
+    show_adj_strand_pairs: False # Show secondary structural elements involved in strand pairing (ADJ_STRAND_PAIR)
+    adj_t2d_offset: -1 # Offset into t2d for the first (ADJ_FAR) of the adj conditioning channels. Supports negative indexing
+    show_hotspots: False # Show positions that have been marked as hotspots
+    hotspot_t1d_offset: -1 # Offset into t1d for the hotspot conditioning. Supports negative indexing which is likely the way to find it
+
+reshape:
+  output_path: null
+  legacy_input_weights: False
+extra_tXd: []
+extra_tXd_params: {}
+use_nonechucks: False
+restart_timer: False
+pin_memory: True
+num_workers: 1
+skip_backward: False
+benchmark: null
+
+fm: null
+
+wandb_project: "fancy-pants "
+allow_more_gpus_on_resume: False
+wandb_dir: "./wandb"
+
+pyrosetta_flags: "-mute all -beta_nov16"

@@ -1,0 +1,11 @@
+defaults: 
+  - RFdiffusion_CA_inference
+
+inference:
+  ckpt_path: 'goldens/tiny_bff7_ckpt'
+
+hydra:
+  job:
+    num: 42
+  runtime:
+    output_dir: './tmp_outdir/'

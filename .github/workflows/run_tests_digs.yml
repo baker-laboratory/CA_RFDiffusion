@@ -1,0 +1,48 @@
+name: run pytest on digs with slurm
+on:
+  pull_request:
+    branches: [ "aa" ]
+permissions:
+  contents: read
+jobs:
+  test:
+    # runs-on: [self-hosted, Linux, X64, digs]
+    runs-on: [digs]
+    steps:
+
+    - name: checkout
+      uses: actions/checkout@v3
+
+    - name: setup
+      run: |
+        ipd update
+        ipd ci update_library
+        ipd ci repo setup_submodules
+
+    - name: run ruff
+      run: |
+        ipd ci tests ruff rf_diffusion
+
+    - name: run pytest digs
+      run: |
+        exe=./rf_diffusion/exec/bakerlab_rf_diffusion_aa.sif
+        ipd ci tests pytest --exe $exe --slurm --parallel 4 --tee --which "test_call_speed test_loss_grad test_ca_rfd"
+
+    - name: check test results
+      run: |
+        ipd ci tests check
+
+    # - name: build docs
+    #   run: |
+    #     export LC_ALL=C
+    #     cd doc
+    #     rm -rf source/api
+    #     export PYTHON=../rf_diffusion/exec/bakerlab_rf_diffusion_aa.sif
+    #     export PYTHONPATH=..:../rf_diffusion:../rf2aa:../lib/rf2aa/rf2aa/SE3Transformer
+    #     $PYTHON -m sphinx.ext.apidoc -o source/api ../rf_diffusion
+    #     $PYTHON -m sphinx.ext.apidoc -o source/api ../rf2aa
+    #     $PYTHON -m sphinx.cmd.build -M html source build
+    #     prnum=$(git branch | cut -b 26-28)
+    #     mkdir -p $HOME/public/rf_diffusion/$prnum/
+    #     rsync -a build/html/ $HOME/public/rf_diffusion/$prnum/
+

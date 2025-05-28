@@ -1,0 +1,56 @@
+defaults:
+  - RFdiffusion_CA_inference
+
+inference: 
+  ckpt_path: 'goldens/tiny_bff3_ckpt' 
+  ca_rfd_refine: true
+  input_pdb: ./test_data/to_refine.pdb
+  cautious: false
+  ligand: mu1
+  refine_recycles: 4
+  ij_visible: null # has to be overriden from defaults to null/None
+  num_designs: 2 # usually 2 is enough for refinement
+  recycle_schedule: "1:4" # at step 1, do 4 recycles. Quotations required...
+  px0_source: refine
+
+
+diffuser:
+  type: refine
+  T: 1 
+
+  r3:
+    T: ${..T}
+    var_scale: 0.0 # refinement model used 1.5 A^2 variance
+    refine_variance: 1.5
+
+  so3:
+    T: ${..T}
+
+#### Transforms ####    
+upstream_inference_transforms:
+  names:
+    - GetTemplatedMotifMasks
+  configs:    
+    ij_visible: null
+    template_ligand: true
+
+preprocess:
+  eye_frames: false
+
+
+transforms: 
+  names:
+    - ComputeMotifTemplateRefine
+    - CenterOnCA # since we are doing motif_only_2d, center on all
+    - AddConditionalInputs
+  configs:
+    ComputeMotifTemplateRefine:
+        use_cb: ${preprocess.use_cb_to_get_pair_dist}
+        omit_frame_permutation: ${preprocess.omit_atom_frame_permutation}
+
+hydra:
+  job:
+    num: 42
+  runtime:
+    output_dir: './tmp_outdir/'
+
