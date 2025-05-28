@@ -2,6 +2,6 @@
 	path = lib/se3_flow_matching
 	url = git@github.com:microsoft/protein-frame-flow.git
 [submodule "lib/rf2aa"]
-    path = lib/rf2aa
-    url = git@github.com:baker-laboratory/RoseTTAFold-All-Atom.git
-    branch = may2025diff
+	path = lib/rf2aa
+	url = git@github.com:baker-laboratory/RoseTTAFold-All-Atom.git
+	branch = may2025diff
