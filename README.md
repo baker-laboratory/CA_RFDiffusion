@@ -16,7 +16,7 @@ This repository contains training and inference code for running CA RFdiffusion:
 2. To install the [RoseTTAFold-All-Atom](https://github.com/baker-laboratory/RoseTTAFold-All-Atom) (`rf2aa`) and [Frame Flow](https://github.com/microsoft/protein-frame-flow) (`se3_flow_matching`) submodules:
    - run `git submodule init`
    - run `git submodule update --init`
-4. Run the tests, via `./rf_diffusion/ca_rfd_tests.sh` while on a cpu (as opposed to running on a host where CUDA_VISIBLE_DEVICES is not empty).
+4. Run the tests, via `cd rf_diffusion/` and then `./ca_rfd_tests.sh` while on a cpu (as opposed to running on a host where CUDA_VISIBLE_DEVICES is not empty).
 5. If you want to run inference, download the pretrained diffusion and refinement models from
    - `https://files.ipd.uw.edu/pub/ca_rfd/ca_rfd_diffusion.pt`
    - `https://files.ipd.uw.edu/pub/ca_rfd/ca_rfd_refinement.pt`
