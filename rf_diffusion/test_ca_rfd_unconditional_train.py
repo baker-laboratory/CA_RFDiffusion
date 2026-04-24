@@ -33,6 +33,8 @@ def get_ca_config(overrides=[]):
     initialize(config_path="config/training")
     conf = compose(config_name='test_ca_rfd_unconditional_train.yaml', overrides=overrides, return_hydra_config=True)
     conf.dataloader.DATAPKL_AA = relative_to_absolute(conf.dataloader.DATAPKL_AA)
+    conf.dataloader.PDB_DIR = relative_to_absolute(conf.dataloader.PDB_DIR)
+    conf.dataloader.MOL_DIR = relative_to_absolute(conf.dataloader.MOL_DIR)
     return conf
 
 def rfold_side_effect(*args, **kwargs): 
@@ -379,4 +381,3 @@ class TestFeaturization(unittest.TestCase):
         torch.testing.assert_close(got_msa_prev, want_msa_prev)
         torch.testing.assert_close(got_pair_prev, want_pair_prev)
         torch.testing.assert_close(got_state_prev, want_state_prev)
-
