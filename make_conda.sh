@@ -1,17 +1,24 @@
 #!/bin/bash 
-
+set -e
 # change to what you want 
 ENV_NAME="ca_rfd_release"
 
 
 # Create new conda env 
-conda create -n $ENV_NAME python=3.9 -y 
+#conda create -n $ENV_NAME python=3.9 -y
+conda create -n $ENV_NAME -y python=3.9 -c defaults -c conda-forge
 
 # hook and activate 
-eval "$('conda' 'shell.bash' 'hook')"
+# eval "$('conda' 'shell.bash' 'hook')"
+eval "$(conda shell.bash hook)"
 conda activate $ENV_NAME 
 conda info --envs
-
+# Verify activation
+#CURRENT_ENV=$(conda info --active-env-name)
+if [ "$CONDA_DEFAULT_ENV" != "$ENV_NAME" ]; then
+    echo "Failed to activate $ENV_NAME. Currently in: $CURRENT_ENV"
+    exit 1
+fi
 #### Install packages #### 
 # They are installed in stages
 
@@ -23,11 +30,13 @@ conda install -y \
 
 # pytorch + dependancies
 conda install -y \
+   -c nvidia \
    -c nvidia/label/cuda-12.1.0 \
    -c pytorch \
    -c pyg \
    -c dglteam/label/cu121 \
    -c anaconda \
+   -c conda-forge \
    pip \
    ipython=8.8.0 \
    "ipykernel>=6.22.0" \
@@ -39,12 +48,12 @@ conda install -y \
    pytorch==2.2 \
    pytorch-cuda==12.1 \
    dgl==2.0.0.cu121 \
-   einops=0.7.0 \
    pyg
 
 conda install -y \
    -c conda-forge \
    openbabel=3.1.1 \
+   einops=0.7.0
 
 # pip extras
 pip install \

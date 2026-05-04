@@ -2,12 +2,15 @@ defaults:
   - RFdiffusion_CA
 
 zero_weights: True 
+rundir: /tmp
 
 diffuser: 
   type: 'legacy'
 
 dataloader:
   DATAPKL_AA: goldens/tiny_dataset_diffusion_20230214.pkl
+  PDB_DIR: test_data/ca_rfd/PDB-2021AUG02
+  MOL_DIR: test_data/ca_rfd/RF2_allatom/rcsb/pkl
 
 spoof_item: "{   'chosen_dataset': 'sm_complex',
                  'mask_gen_seed': 46265381,

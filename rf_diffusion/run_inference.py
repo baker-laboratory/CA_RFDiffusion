@@ -149,31 +149,33 @@ def add_carfd_sidechains(px0: torch.Tensor, ref_dict: dict) -> torch.Tensor:
     motif_idx_hal = ref_dict['con_hal_idx0']
 
     # grab the sequence & structure of non-SM motif residues  
-    motif_seq_ref = motif_indep.seq[motif_idx_ref]
-    motif_crds_ref = motif_indep.xyz[motif_idx_ref]
+    # need a big IF here
+    if len(motif_idx_ref) > 0:
+        motif_seq_ref = motif_indep.seq[motif_idx_ref]
+        motif_crds_ref = motif_indep.xyz[motif_idx_ref]
 
-    # compute sidechain torsions in the original (ref) motif
-    converter = rf2aa.util_module.XYZConverter()
-    tors, tors_alt, tors_mask, tors_planar = converter.get_torsions(motif_crds_ref[None], 
-                                                                    motif_seq_ref[None])
-    
+        # compute sidechain torsions in the original (ref) motif
+        converter = rf2aa.util_module.XYZConverter()
+        tors, tors_alt, tors_mask, tors_planar = converter.get_torsions(motif_crds_ref[None], 
+                                                                        motif_seq_ref[None])
+        
 
-    # grab predicted ("hal") motif backbone coordinates, and extend sidechains onto them 
-    # according to the torsions from perfect motif
-    motif_bb_hal = px0[motif_idx_hal,:3,:]
-    motif_allatom_hal = converter.compute_all_atom(motif_seq_ref[None], motif_bb_hal[None], tors)
-    (RTframes, xyz_full) = motif_allatom_hal 
-    # slice it in
-    px0[motif_idx_hal,:14] = xyz_full[0,:,:14]
+        # grab predicted ("hal") motif backbone coordinates, and extend sidechains onto them 
+        # according to the torsions from perfect motif
+        motif_bb_hal = px0[motif_idx_hal,:3,:]
+        motif_allatom_hal = converter.compute_all_atom(motif_seq_ref[None], motif_bb_hal[None], tors)
+        (RTframes, xyz_full) = motif_allatom_hal 
+        # slice it in
+        px0[motif_idx_hal,:14] = xyz_full[0,:,:14]
 
-    # now align the output to the original motif on backbone
-    motif_bb_ref = motif_crds_ref[:,:3]
-    com_ref = motif_bb_ref.reshape(-1,3).mean(dim=0)
-    com_hal = motif_bb_hal.reshape(-1,3).mean(dim=0)
-    bb_rms, _, R = th_kabsch(motif_bb_ref.reshape(-1,3), motif_bb_hal.reshape(-1,3))
-    # bring to origin, rotate, then translate to reference/native position
-    px0 = torch.einsum('lai,ij->laj', px0 - com_hal, R) + com_ref
-
+        # now align the output to the original motif on backbone
+        motif_bb_ref = motif_crds_ref[:,:3]
+        com_ref = motif_bb_ref.reshape(-1,3).mean(dim=0)
+        com_hal = motif_bb_hal.reshape(-1,3).mean(dim=0)
+        bb_rms, _, R = th_kabsch(motif_bb_ref.reshape(-1,3), motif_bb_hal.reshape(-1,3))
+        # bring to origin, rotate, then translate to reference/native position
+        px0 = torch.einsum('lai,ij->laj', px0 - com_hal, R) + com_ref
+    #else: # no motif
     return px0
 
 
