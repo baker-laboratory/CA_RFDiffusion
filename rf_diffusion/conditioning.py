@@ -313,8 +313,8 @@ class ComputeMotifTemplateRefine:
         ref_dict = conditions_dict['ref_dict']
         motif_indep  = ref_dict['motif_indep']
         ij_visible   = ref_dict['ij_visible']
-        con_hal_idx0 = torch.from_numpy(ref_dict['con_hal_idx0'])
-        con_ref_idx0 = torch.from_numpy(ref_dict['con_ref_idx0'])
+        con_hal_idx0 = torch.from_numpy(ref_dict['con_hal_idx0']).long()
+        con_ref_idx0 = torch.from_numpy(ref_dict['con_ref_idx0']).long()
 
         ### Compute 1D/2D mask information ### 
         ######################################
@@ -322,17 +322,16 @@ class ComputeMotifTemplateRefine:
         # hal structure (design from diffusion)
         L_sm = indep.is_sm.sum()
         L_hal_w_ligand = indep.length()
-        add_con_hal0 = torch.arange(L_hal_w_ligand-L_sm, L_hal_w_ligand)
+        add_con_hal0 = torch.arange(L_hal_w_ligand-L_sm, L_hal_w_ligand, dtype=torch.long)
         con_hal_idx0 = torch.cat((con_hal_idx0, add_con_hal0))
         # reference structure (original motif pdb)
         L_ref_w_ligand = motif_indep.length()
-        add_con_ref0 = torch.arange(L_ref_w_ligand-L_sm, L_ref_w_ligand)
+        add_con_ref0 = torch.arange(L_ref_w_ligand-L_sm, L_ref_w_ligand, dtype=torch.long)
         con_ref_idx0 = torch.cat((con_ref_idx0, add_con_ref0))
 
 
         # Get constraints between motif chunks - coarse
         coarse_ij_visibility = get_coarse_ij_matrix(ij_visible)
-
         is_motif = torch.zeros(L_hal_w_ligand, dtype=torch.bool)
         is_motif[con_hal_idx0] = True # contains protein motif + ligand motif
         
